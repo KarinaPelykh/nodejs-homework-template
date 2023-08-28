@@ -10,7 +10,14 @@ const schemaContact = Joi.object({
   phone: Joi.string()
     .required()
     .messages({ "any.required": "missing required phone" }),
+  favorite: Joi.boolean()
+    .required()
+    .messages({ "any.required": "missing required favorite" }),
+});
+const contactUpdateFavoriteSchema = Joi.object({
+  favorite: Joi.boolean().required(),
 });
 module.exports = {
   schemaContact,
+  contactUpdateFavoriteSchema,
 };
