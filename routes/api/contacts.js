@@ -13,7 +13,9 @@ const updateContactFavoritValidate = valdateBody(
   schemas.contactUpdateFavoriteSchema
 );
 
-const { isValidId } = require("../../middelwares");
+const { authenticate, isValidId } = require("../../middelwares");
+
+router.use(authenticate);
 
 router.get("/", contrroller.contactAll);
 
