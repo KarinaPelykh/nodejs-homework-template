@@ -13,7 +13,7 @@ const updateContactFavoritValidate = valdateBody(
   schemas.contactUpdateFavoriteSchema
 );
 
-const { authenticate, isValidId } = require("../../middelwares");
+const { authenticate, upload, isValidId } = require("../../middelwares");
 
 router.use(authenticate);
 
@@ -21,7 +21,12 @@ router.get("/", contrroller.contactAll);
 
 router.get("/:id", isValidId, contrroller.getContactById);
 
-router.post("/", addContactValidate, contrroller.addContact);
+router.post(
+  "/",
+  upload.single("poster"),
+  addContactValidate,
+  contrroller.addContact
+);
 
 router.delete("/:id", contrroller.deletContact);
 

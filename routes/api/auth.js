@@ -4,7 +4,7 @@ const contrroller = require("../../controllers/auth");
 
 const { valdateBody } = require("../../decorator/valdateBody");
 
-const { authenticate } = require("../../middelwares");
+const { authenticate, upload } = require("../../middelwares");
 
 const schames = require("../../schemas/user");
 
@@ -21,5 +21,14 @@ router.post("/users/login", signinValidateMiddlewere, contrroller.signIn);
 router.get("/users/current", authenticate, contrroller.getCurrent);
 
 router.post("/users/logout", authenticate, contrroller.signOut);
+
+router.patch("/users/users", authenticate, contrroller.updateSubscription);
+
+router.patch(
+  "/users/avatars",
+  authenticate,
+  upload.single("avatar"),
+  contrroller.updataAvatar
+);
 
 module.exports = router;
