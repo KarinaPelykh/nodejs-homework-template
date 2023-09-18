@@ -13,7 +13,12 @@ const userSigninSchame = Joi.object({
   email: Joi.string().pattern(regexpEmail).required(),
 });
 
+const userEmailSchame = Joi.object({
+  email: Joi.string().pattern(regexpEmail).required(),
+});
+
 module.exports = {
   userSignupSchame,
   userSigninSchame,
+  userEmailSchame,
 };

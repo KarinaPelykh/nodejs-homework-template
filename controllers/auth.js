@@ -5,13 +5,15 @@ const gravatar = require("gravatar");
 const path = require("path");
 const fs = require("fs/promises");
 const Jimp = require("jimp");
-const { HttpError } = require("../helpers");
+const { nanoid } = require("nanoid");
+const { HttpError, sendEmail } = require("../helpers");
 
 const { cntrWrapper } = require("../decorator");
 
-const { JWT_SECRET } = process.env;
+const { JWT_SECRET, PROJECT_URL } = process.env;
 
 const avatarsDir = path.join(__dirname, "../", "public", "avatars");
+
 const signUp = async (req, res) => {
   const { email, password } = req.body;
   const user = await User.findOne({ email });
@@ -22,11 +24,23 @@ const signUp = async (req, res) => {
   const avatarURL = gravatar.url(email);
 
   const hashPassword = await bcrypt.hash(password, 10);
+  const verificationToken = nanoid();
+
   const newUser = await User.create({
     ...req.body,
     password: hashPassword,
     avatarURL,
+    verificationToken,
   });
+
+  const verifiEmail = {
+    to: email,
+    subject: "Veryfi email",
+    html: `<a href="${PROJECT_URL}/api/auth/users/verify/${verificationToken}"  target="_blank">Click verify email</a>`,
+  };
+
+  await sendEmail(verifiEmail);
+
   res.status(201).json({
     email: newUser.email,
     subscription: newUser.subscription,
@@ -38,6 +52,10 @@ const signIn = async (req, res) => {
   const user = await User.findOne({ email });
   if (!user) {
     throw HttpError(401, "Email or password is wrong");
+  }
+
+  if (!user.verify) {
+    throw HttpError(401, "Email no verify");
   }
   const passwordCompare = await bcrypt.compare(password, user.password);
   if (!passwordCompare) {
@@ -100,6 +118,41 @@ const updataAvatar = async (req, res) => {
   });
 };
 
+const verify = async (req, res) => {
+  const { verificationToken } = req.params;
+  const user = await User.findOne({ verificationToken });
+  if (!user) {
+    throw HttpError(401, "User not Found");
+  }
+
+  await User.findByIdAndUpdate(user._id, {
+    verify: true,
+    verificationToken: "null",
+  });
+
+  res.json({ message: "Verification successful" });
+};
+
+const resendVerifyEmail = async (req, res) => {
+  const { email } = req.body;
+  const emailUser = await User.findById({ email });
+  if (!emailUser) {
+    throw HttpError(400, "missing reguired field email");
+  }
+
+  const verifiEmail = {
+    to: email,
+    subject: "Veryfi email",
+    html: `<a href="${PROJECT_URL}/api/auth/users/verify/${emailUser.verificationToken}"  target="_blank">Click verify email</a>`,
+  };
+
+  await sendEmail(verifiEmail);
+  if (emailUser.verify) {
+    throw HttpError(400, "Verification has already been passed");
+  }
+
+  res.json({ message: " Verify email success send " });
+};
 module.exports = {
   signUp: cntrWrapper(signUp),
   signIn: cntrWrapper(signIn),
@@ -107,4 +160,6 @@ module.exports = {
   signOut: cntrWrapper(signOut),
   updateSubscription: cntrWrapper(updateSubscription),
   updataAvatar: cntrWrapper(updataAvatar),
+  verify: cntrWrapper(verify),
+  resendVerifyEmail: cntrWrapper(resendVerifyEmail),
 };

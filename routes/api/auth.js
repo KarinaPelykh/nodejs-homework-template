@@ -14,6 +14,8 @@ const signupValidateMiddlewere = valdateBody(schames.userSignupSchame);
 
 const signinValidateMiddlewere = valdateBody(schames.userSigninSchame);
 
+const emailValidateMiddlewere = valdateBody(schames.userEmailSchame);
+
 router.post("/users/register", signupValidateMiddlewere, contrroller.signUp);
 
 router.post("/users/login", signinValidateMiddlewere, contrroller.signIn);
@@ -31,4 +33,11 @@ router.patch(
   contrroller.updataAvatar
 );
 
+router.get("/users/verify/:verificationToken", contrroller.verify);
+
+router.post(
+  "/users/verify",
+  emailValidateMiddlewere,
+  contrroller.resendVerifyEmail
+);
 module.exports = router;
